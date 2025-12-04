@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflict Escalation Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: black;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #444;
+            font-size: 0.9em;
+        }
+
+        input[type="number"],
+        select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select {
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result.high-risk {
+            background: black;
+            color: white;
+        }
+
+        .result.low-risk {
+            background: black;
+            color: white;
+        }
+
+        .result h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conflict Escalation Predictor</h1>
+        <p class="subtitle">Predict the likelihood of military conflict escalation between two states</p>
+
+        <form id="predictionForm">
+            <!-- State A Capabilities -->
+            <div class="section">
+                <h2>State A - National Capabilities</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="irst_a">Iron & Steel Production (1000s tons)</label>
+                        <input type="number" id="irst_a" name="irst_a" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="milex_a">Military Expenditure (1000s USD)</label>
+                        <input type="number" id="milex_a" name="milex_a" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="milper_a">Military Personnel (1000s)</label>
+                        <input type="number" id="milper_a" name="milper_a" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="tpop_a">Total Population (1000s)</label>
+                        <input type="number" id="tpop_a" name="tpop_a" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="upop_a">Urban Population (1000s)</label>
+                        <input type="number" id="upop_a" name="upop_a" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State B Capabilities -->
+            <div class="section">
+                <h2>State B - National Capabilities</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="irst_b">Iron & Steel Production (1000s tons)</label>
+                        <input type="number" id="irst_b" name="irst_b" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="milex_b">Military Expenditure (1000s USD)</label>
+                        <input type="number" id="milex_b" name="milex_b" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="milper_b">Military Personnel (1000s)</label>
+                        <input type="number" id="milper_b" name="milper_b" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="tpop_b">Total Population (1000s)</label>
+                        <input type="number" id="tpop_b" name="tpop_b" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="upop_b">Urban Population (1000s)</label>
+                        <input type="number" id="upop_b" name="upop_b" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alliance Information -->
+            <div class="section">
+                <h2>Alliance Status</h2>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Check any alliances that exist between the two states:</p>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="defense" name="defense" value="1">
+                    <label for="defense">Defense Alliance</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="neutrality" name="neutrality" value="1">
+                    <label for="neutrality">Neutrality Pact</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nonaggression" name="nonaggression" value="1">
+                    <label for="nonaggression">Non-Aggression Pact</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="entente" name="entente" value="1">
+                    <label for="entente">Entente</label>
+                </div>
+            </div>
+
+            <!-- Trade Information -->
+            <div class="section">
+                <h2>Bilateral Trade</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="smoothflow1">Trade Flow A→B (Million USD)</label>
+                        <input type="number" id="smoothflow1" name="smoothflow1" step="0.01" value="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="smoothflow2">Trade Flow B→A (Million USD)</label>
+                        <input type="number" id="smoothflow2" name="smoothflow2" step="0.01" value="0" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contiguity Information -->
+            <div class="section">
+                <h2>Geographic Proximity</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="conttype">Contiguity Type</label>
+                        <select id="conttype" name="conttype" required>
+                            <option value="0">0 - Not contiguous</option>
+                            <option value="1">1 - Land or river border</option>
+                            <option value="2">2 - Separated by ≤12 miles of water</option>
+                            <option value="3">3 - Separated by 12-24 miles of water</option>
+                            <option value="4">4 - Separated by 24-150 miles of water</option>
+                            <option value="5">5 - Separated by 150-400 miles of water</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="color: #888; font-size: 0.85em; margin-top: 10px; font-style: italic;">
+                    Note: "States are contiguous" and "Land border exists" are automatically determined from contiguity type
+                </p>
+            </div>
+
+            <div class="button-container">
+                <button type="submit">Predict Escalation Risk</button>
+            </div>
+        </form>
+
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Analyzing conflict dynamics...</p>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+
+        <div class="result" id="result">
+            <h3 id="resultTitle"></h3>
+            <p id="resultProbability"></p>
+            <p id="resultConfidence"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide previous results
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Show loading
+            document.querySelector('.loading').style.display = 'block';
+
+            // Gather form data
+            const formData = new FormData(e.target);
+            const data = {};
+
+            // Get numeric inputs
+            const numericFields = [
+                'irst_a', 'milex_a', 'milper_a', 'tpop_a', 'upop_a',
+                'irst_b', 'milex_b', 'milper_b', 'tpop_b', 'upop_b',
+                'smoothflow1', 'smoothflow2', 'conttype'
+            ];
+
+            numericFields.forEach(field => {
+                data[field] = parseFloat(formData.get(field) || 0);
+            });
+
+            // Get checkbox values (0 or 1) - only alliance checkboxes
+            const checkboxFields = [
+                'defense', 'neutrality', 'nonaggression', 'entente'
+            ];
+
+            checkboxFields.forEach(field => {
+                data[field] = document.getElementById(field).checked ? 1 : 0;
+            });
+
+            // Note: any_alliance, is_contiguous, and land_contiguous are computed on backend
+
+            try {
+                // Send prediction request
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                document.querySelector('.loading').style.display = 'none';
+
+                if (response.ok) {
+                    // Show result
+                    const resultDiv = document.getElementById('result');
+                    const isHighRisk = result.prediction === 1;
+
+                    resultDiv.className = 'result ' + (isHighRisk ? 'high-risk' : 'low-risk');
+                    resultDiv.style.display = 'block';
+
+                    document.getElementById('resultTitle').textContent =
+                        isHighRisk ? '⚠️ HIGH ESCALATION RISK' : '✅ LOW ESCALATION RISK';
+                    document.getElementById('resultProbability').textContent =
+                        `Escalation Probability: ${(result.probability * 100).toFixed(2)}%`;
+                    document.getElementById('resultConfidence').textContent =
+                        `Model Confidence: ${result.confidence}`;
+                } else {
+                    // Show error
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.textContent = 'Error: ' + (result.error || 'Unknown error occurred');
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                // Hide loading
+                document.querySelector('.loading').style.display = 'none';
+
+                // Show error
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

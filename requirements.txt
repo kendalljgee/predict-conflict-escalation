@@ -1,0 +1,17 @@
+Flask==3.0.0
+pandas==2.1.3
+gunicorn==21.2.0
+```
+
+### `.gitignore`
+```
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+*.log
+.DS_Store
